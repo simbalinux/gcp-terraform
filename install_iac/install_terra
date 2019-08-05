@@ -1,0 +1,109 @@
+#!/bin/bash
+
+set -ex
+
+main () {
+# ---- set OS specific parameters  -----
+
+if [ -f /etc/redhat-release ]; then 
+  package_manager="yum"
+  sudo yum install epel-release -y
+  # -- FUNCTION CALL --
+  install_terraform
+fi
+
+if [ -f /etc/lsb-release ]; then
+  package_manager="apt-get"
+  sudo "$package_manager" install python-pip -y
+  sudo apt-add-repository ppa:ansible/ansible -y 
+  sudo pip install flask 
+  # -- FUNCTION CALL --
+  install_terraform  
+fi
+
+# -- call export_vars function for direnv to source VARS --
+
+#export_vars
+}
+
+# -- we use a single installation function anythin unique to hte OS place in the MAIN function --
+install_terraform ()
+{
+# requirements update system first
+sudo "$package_manager" update -y 
+
+# install utility packages 
+sudo "$package_manager" install curl wget vim git unzip -y
+
+# install python-pip 
+sudo "$package_manager" install python-pip -y
+sudo pip install --upgrade pip
+
+# install aws_cli
+sudo pip install awscli
+sudo pip install --upgrade awscli
+
+# check version
+aws --version
+
+#                       ---- NOTES: configuring awscli ---
+# now configure aws cli  (https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+# aws configure --profile NAME_OF_PROFILE 
+
+# unzip to /tmp will be removed on reboot while in /tmp
+cd /tmp
+wget https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
+unzip terraform*.zip
+
+chmod +x terraform*
+
+# this adds terraform to the path
+sudo mv terraform /usr/local/bin/terraform
+
+
+# now configure aws cli see URL below:
+# https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
+
+#### ----- UNCOMMENT THIS FOR ANSIBLE AND AWS CONFIGURATION ----
+## installing ansible, scheck MAIN function for OS specific requirements 
+#sudo "$package_manager" update -y
+#sudo "$package_manager" install ansible -y
+#
+# check IF ssh key exists else create no password ssh key, ideal for shell scripts
+if [ -f $HOME/.ssh/id_rsa ]; then
+  echo rsa key installed
+else
+  ssh-keygen -f $HOME/.ssh/id_rsa -t rsa -N ''
+fi
+#
+###   these ssh steps are important for the automation to work properly.
+#
+## enable the ssh agent by exporting ENV VARS to the local TTY
+eval `ssh-agent -s`
+## add key to the agent (change for your own key name)
+ssh-add ~/.ssh/id_rsa
+## view/list key (that have been added to the agent) 
+ssh-add -l
+#
+## disable host key checking, used to avoid prompt when connecting to "new" servers to provision.
+#sudo sed -i 's/#host_key_checking = False/host_key_checking = False/g' /etc/ansible/ansible.cfg
+#
+## ---- setup our working DIR IF ! exist ----
+#
+#if [ ! -d $HOME/terransible ]; then 
+#  # change to the terraform dir
+#  mkdir $HOME/terransible && cd $HOME/terransible
+#  
+#  # create the file structure IF ! exist
+#  #touch main.tf terraform.tfvars variables.tf userdata aws_hosts wordpress.yml s3update.yml
+#  
+#  # view layout
+#  ls -al 
+#  
+#  # ensure you put this in your .gitignore 
+#  #cp -rf /vagrant/terraform_files/terraform.tfvars $HOME/terransible/
+#  
+#fi
+}
+# main function to begin program execution
+main

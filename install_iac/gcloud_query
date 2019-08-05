@@ -1,0 +1,7 @@
+#!/usr/bin/env bash 
+set -x
+gcloud compute instances list 
+gcloud compute ssh from flask import Flask
+
+
+

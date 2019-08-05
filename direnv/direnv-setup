@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# -- direnv is an environment switcher for the shell. It knows how to hook into bash, zsh, tcsh, fish shell and elvish 
+# -- to load or unload environment variables depending on the current directory. This allows project-specific environment 
+# -- variables without cluttering the ~/.profile file. 
+
+# -- DOCS: https://direnv.net/ 
+
+set -x
+
+# -- OS detection
+if [ -f /etc/redhat-release ]; then
+  package_manager="yum"
+else  
+  package_manager="apt-get" 
+fi
+
+# -- install packages
+sudo "$package_manager" -y install wget curl jq tree vim 
+cd /tmp
+wget https://github.com/direnv/direnv/releases/download/v2.18.2/direnv.linux-amd64
+
+chmod +x direnv.linux-amd64
+ 
+sudo mv $PWD/direnv.linux-amd64 /usr/local/bin/direnv
+echo 'eval "$(direnv hook bash)"' >> $HOME/.bashrc
+source $HOME/.bashrc

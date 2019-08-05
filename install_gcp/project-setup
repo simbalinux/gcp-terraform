@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# OS agnostic gcloud SDK installed
+
+# --- enable debug
+set -x 
+
+# --- set project base DIR
+cd $HOME
+
+# --- prepare a new GCP project
+gcloud projects list
+gcloud projects create $CLOUDSDK_CORE_PROJECT
+gcloud alpha billing accounts list --filter="open:true"
+gcloud alpha billing projects link $CLOUDSDK_CORE_PROJECT --billing-account=$CLOUDSDK_BILLING_ACCOUNT
+gcloud iam service-accounts create $CLOUDSDK_CORE_PROJECT 
+gcloud iam service-accounts keys create $CLOUDSDK_CORE_PROJECT.key.json --iam-account=$CLOUDSDK_IAM_EMAIL
+gcloud projects add-iam-policy-binding $CLOUDSDK_CORE_PROJECT --member=serviceAccount:$CLOUDSDK_IAM_EMAIL --role=roles/editor

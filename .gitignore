@@ -1,0 +1,13 @@
+.yml
+*.json
+.envrc
+.vagrant
+.vim
+.bash_history 
+credentials.csv
+terraform.tfvars
+README.md
+.log
+dns-delegation
+ubuntu-xenial-16.04-cloudimg-console.log
+project_notes
